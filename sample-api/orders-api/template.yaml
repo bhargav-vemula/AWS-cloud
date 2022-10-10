@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  orders-api
+
+Globals:
+  Function:
+    Runtime: python3.9
+    Timeout: 30
+    Environment:
+      Variables:
+        ORDERS_TABLE: !Ref OrdersTable
+
+Resources:
+  OrdersTable:
+    Type: AWS::Serverless::SimpleTable # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: Number
+  CreateOrdersFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: orders_api/
+      Handler: create.lambda_handler
+      Events:
+        CreateOrders:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /orders
+            Method: POST
+      Policies:
+          - DynamoDBCrudPolicy:
+              TableName: !Ref OrdersTable         
+  ReadOrdersFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: orders_api/
+      Handler: read.lambda_handler
+      Events:
+        ReadOrders:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /orders/{id}
+            Method: GET 
+      Policies:
+          - DynamoDBReadPolicy:
+              TableName: !Ref OrdersTable  
+
+  UpdateOrdersFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: orders_api/
+      Handler: update.lambda_handler
+      Events:
+        CreateOrders:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /orders/{id}
+            Method: PUT
+      Policies:
+          - DynamoDBCrudPolicy:
+              TableName: !Ref OrdersTable    
+  DeleteOrdersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: orders_api/
+      Handler: delete.lambda_handler
+      Events:
+        DeleteOrders:
+          Type: Api
+          Properties:
+            Path: /orders/{id}
+            Method: DELETE
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OrdersTable      
+  ListeOrdersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: orders_api/
+      Handler: get_list.lambda_handler
+      Events:
+        ListOrders:
+          Type: Api
+          Properties:
+            Path: /orders
+            Method: Get
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OrdersTable                                      
